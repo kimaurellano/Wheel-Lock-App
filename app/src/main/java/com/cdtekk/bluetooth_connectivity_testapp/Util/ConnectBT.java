@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp;
+package com.cdtekk.bluetooth_connectivity_testapp.Util;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -8,6 +8,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.ParcelUuid;
 import android.widget.Toast;
+
+import com.cdtekk.bluetooth_connectivity_testapp.Interface.AsyncResponse;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp;
+package com.cdtekk.bluetooth_connectivity_testapp.Activity;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -9,7 +9,5 @@ public class LoginActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
     }
 }
