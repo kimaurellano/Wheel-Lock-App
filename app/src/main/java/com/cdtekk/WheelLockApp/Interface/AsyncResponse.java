@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp.Interface;
+package com.cdtekk.WheelLockApp.Interface;
 
 public interface AsyncResponse {
     void processingFinish(Boolean output);

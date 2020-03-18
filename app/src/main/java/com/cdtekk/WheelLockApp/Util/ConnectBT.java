@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp.Util;
+package com.cdtekk.WheelLockApp.Util;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -9,7 +9,7 @@ import android.os.AsyncTask;
 import android.os.ParcelUuid;
 import android.widget.Toast;
 
-import com.cdtekk.bluetooth_connectivity_testapp.Interface.AsyncResponse;
+import com.cdtekk.WheelLockApp.Interface.AsyncResponse;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -25,7 +25,7 @@ public class ConnectBT extends AsyncTask<Void, Void, Void> {
     private BluetoothDevice device;
     public AsyncResponse delegate = null;
 
-    ConnectBT(Context context, BluetoothAdapter adapter, String address) {
+    public ConnectBT(Context context, BluetoothAdapter adapter, String address) {
         this.context = context;
         this.address = address;
         this.adapter = adapter;

@@ -11,7 +11,7 @@
         android:id="@+id/dropdownBleList"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:name="com.cdtekk.bluetooth_connectivity_testapp.Fragment.BLEFragment"
+        android:name="com.cdtekk.WheelLockApp.Fragment.BLEFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

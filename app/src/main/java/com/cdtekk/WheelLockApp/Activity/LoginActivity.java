@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp.Activity;
+package com.cdtekk.WheelLockApp.Activity;
 
 import android.app.Activity;
 import android.os.Bundle;

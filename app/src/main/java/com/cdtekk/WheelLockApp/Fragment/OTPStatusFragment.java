@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp.Fragment;
+package com.cdtekk.WheelLockApp.Fragment;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -6,9 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
-import com.cdtekk.bluetooth_connectivity_testapp.Interface.IFragmentChange;
-import com.cdtekk.bluetooth_connectivity_testapp.R;
+import com.cdtekk.WheelLockApp.Interface.IFragmentChange;
+import com.cdtekk.WheelLockApp.R;
 
 import java.util.Objects;
 
@@ -19,6 +21,11 @@ import androidx.fragment.app.Fragment;
 public class OTPStatusFragment extends Fragment {
 
     private IFragmentChange fragmentChangeListener;
+    private String _message;
+
+    public void setOtp(String message){
+        _message = message;
+    }
 
     @Nullable
     @Override
@@ -35,7 +42,17 @@ public class OTPStatusFragment extends Fragment {
         buttonEnterOTP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // What fragment should be displayed
+                EditText editTextOtpInput = Objects.requireNonNull(getActivity()).findViewById(R.id.editTextOTPInput);
+
+                int inputOtpi = Integer.parseInt(editTextOtpInput.getText().toString());
+                int otpi = Integer.parseInt(_message.replace('\"', ' ').trim());
+
+                if(inputOtpi != otpi){
+                    Toast.makeText(getContext(), "Invalid OTP", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Verified
                 fragmentChangeListener.OnFragmentChange(new UserControlFragment());
             }
         });
