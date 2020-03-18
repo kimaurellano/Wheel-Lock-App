@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
@@ -45,12 +47,10 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-
         currentFragment = new OTPStatusFragment();
 
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.fragment_container_root_view , currentFragment);
-
         fragmentTransaction.commit();
 
         asyncResponse = this;
@@ -61,9 +61,8 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
     @Override
     public void OnFragmentChange(Fragment fragmentObject) {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.remove(currentFragment);
-        fragmentTransaction.add(R.id.fragment_container_root_view, fragmentObject);
-
+        fragmentTransaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out);
+        fragmentTransaction.replace(R.id.fragment_container_root_view, fragmentObject);
         fragmentTransaction.commit();
     }
 

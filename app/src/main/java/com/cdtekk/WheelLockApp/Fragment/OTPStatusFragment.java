@@ -22,6 +22,7 @@ public class OTPStatusFragment extends Fragment {
 
     private IFragmentChange fragmentChangeListener;
     private String _message;
+    private EditText editTextOtpInput;
 
     public void setOtp(String message){
         _message = message;
@@ -38,12 +39,18 @@ public class OTPStatusFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         Button buttonEnterOTP = Objects.requireNonNull(getView()).findViewById(R.id.buttonEnterOTP);
+        editTextOtpInput = Objects.requireNonNull(getActivity()).findViewById(R.id.editTextOTPInput);
+        editTextOtpInput.setLetterSpacing(0.5f);
+        editTextOtpInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                editTextOtpInput.setText("");
+            }
+        });
 
         buttonEnterOTP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EditText editTextOtpInput = Objects.requireNonNull(getActivity()).findViewById(R.id.editTextOTPInput);
-
                 int inputOtpi = Integer.parseInt(editTextOtpInput.getText().toString());
                 int otpi = Integer.parseInt(_message.replace('\"', ' ').trim());
 
