@@ -5,14 +5,10 @@
             <item>
                 <shape android:shape="rectangle">
                     <stroke android:width="2px" android:color="@color/colorOrange" />
+                    <solid android:color="@android:color/transparent"/>
                     <corners android:radius="25dp" />
                 </shape>
             </item>
-
-<!--            <item>-->
-<!--                <bitmap-->
-<!--                    android:gravity="right" android:src="@drawable/arrow" />-->
-<!--            </item>-->
         </layer-list>
     </item>
 
