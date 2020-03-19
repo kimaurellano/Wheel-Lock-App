@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cdtekk.WheelLockApp.Interface.IFragmentChange;
@@ -41,16 +44,15 @@ public class OTPStatusFragment extends Fragment {
         Button buttonEnterOTP = Objects.requireNonNull(getView()).findViewById(R.id.buttonEnterOTP);
         editTextOtpInput = Objects.requireNonNull(getActivity()).findViewById(R.id.editTextOTPInput);
         editTextOtpInput.setLetterSpacing(0.5f);
-        editTextOtpInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean b) {
-                editTextOtpInput.setText("");
-            }
-        });
 
         buttonEnterOTP.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(_message == null){
+                    Toast.makeText(getContext(), "Wait for OTP message", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 int inputOtpi = Integer.parseInt(editTextOtpInput.getText().toString());
                 int otpi = Integer.parseInt(_message.replace('\"', ' ').trim());
 

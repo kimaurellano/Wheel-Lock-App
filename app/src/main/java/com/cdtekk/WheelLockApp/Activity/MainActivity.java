@@ -3,16 +3,23 @@ package com.cdtekk.WheelLockApp.Activity;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Pair;
+import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.cdtekk.WheelLockApp.Fragment.OTPStatusFragment;
+import com.cdtekk.WheelLockApp.Fragment.UserControlFragment;
 import com.cdtekk.WheelLockApp.Interface.AsyncResponse;
 import com.cdtekk.WheelLockApp.Interface.IFragmentChange;
 import com.cdtekk.WheelLockApp.R;
@@ -21,20 +28,24 @@ import com.cdtekk.WheelLockApp.Util.ConnectBT;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 public class MainActivity extends AppCompatActivity implements IFragmentChange, AsyncResponse {
 
-    private ArrayAdapter<String> arrayAdapter;
     private BluetoothAdapter bluetoothAdapter;
     private ConnectBT connectBT;
     private AsyncResponse asyncResponse;
+    private ProgressBar progressBarBLEConn;
+    private Spinner spinnerBLEList;
+    private ImageView imageViewBLEIcon;
+    private Button buttonDisconnect;
 
     private boolean stopThread;
     private String recievedMessage;
@@ -47,6 +58,13 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        progressBarBLEConn = findViewById(R.id.progressbarBLEConn);
+        spinnerBLEList = findViewById(R.id.spinnerBleList);
+        imageViewBLEIcon = findViewById(R.id.imageViewBLEIcon);
+        buttonDisconnect = findViewById(R.id.buttonDisconnect);
+
+        imageViewBLEIcon.setVisibility(View.INVISIBLE);
+
         currentFragment = new OTPStatusFragment();
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -56,6 +74,77 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         asyncResponse = this;
 
         bluetoothStart();
+
+        imageViewBLEIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(buttonDisconnect.getVisibility() == View.VISIBLE){
+                    updateIcon(
+                            buttonDisconnect,
+                            0,
+                            R.id.buttonDisconnect,
+                            1f,
+                            0f,
+                            500,
+                            View.INVISIBLE
+                    );
+                } else {
+                    updateIcon(
+                            buttonDisconnect,
+                            0,
+                            R.id.buttonDisconnect,
+                            0f,
+                            1f,
+                            500,
+                            View.VISIBLE
+                    );
+                }
+            }
+        });
+
+        buttonDisconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(connectBT != null){
+                    try {
+                        Toast.makeText(MainActivity.this, "Disconnected", Toast.LENGTH_SHORT).show();
+                        ConnectBT.getmSocket().close();
+
+                        updateIcon(
+                                imageViewBLEIcon,
+                                R.drawable.ic_bluetooth,
+                                R.id.imageViewBLEIcon,
+                                1f,
+                                0f,
+                                250,
+                                View.INVISIBLE);
+
+                        updateIcon(
+                                buttonDisconnect,
+                                0,
+                                R.id.buttonDisconnect,
+                                1f,
+                                0f,
+                                500,
+                                View.INVISIBLE
+                        );
+
+                        for (Fragment frg: Objects.requireNonNull(currentFragment.getActivity()).getSupportFragmentManager().getFragments()) {
+                            if(frg instanceof UserControlFragment){
+                                // Back to home page upon disconnect on Usercontrol
+                                OnFragmentChange(new OTPStatusFragment());
+                            }
+                        }
+
+                        // Reset dropdown
+                        int i = spinnerBLEList.getSelectedItemPosition() - spinnerBLEList.getSelectedItemPosition();
+                        spinnerBLEList.setSelection(i, false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -64,14 +153,27 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         fragmentTransaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out);
         fragmentTransaction.replace(R.id.fragment_container_root_view, fragmentObject);
         fragmentTransaction.commit();
+
+        currentFragment = fragmentObject;
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void processingFinish(Boolean isConnected) {
+        progressBarBLEConn.setVisibility(View.INVISIBLE);
         if(!isConnected){
             Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        updateIcon(
+                imageViewBLEIcon,
+                R.drawable.ic_bluetooth,
+                R.id.imageViewBLEIcon,
+                0f,
+                1f,
+                250,
+                View.VISIBLE);
 
         Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
         beginListenForData();
@@ -90,36 +192,71 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
                 startActivityForResult(enableBtIntent, 1);
             }
 
+            final List<Pair<String, String>> pairList = new ArrayList<>();
             Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
             if(pairedDevices.size() > 0){
-                arrayAdapter =
-                        new ArrayAdapter<>(MainActivity.this, android.R.layout.select_dialog_singlechoice);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
+                adapter.add("----");
                 for (BluetoothDevice bluetoothDevice : pairedDevices){
-                    arrayAdapter.add(bluetoothDevice.getName() + "\n" + bluetoothDevice.getAddress());
+                    String deviceName = bluetoothDevice.getName();
+                    String deviceAddress = bluetoothDevice.getAddress();
+
+                    adapter.add(deviceName);
+                    pairList.add(new Pair<>(deviceName, deviceAddress));
                 }
+
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerBLEList.setAdapter(adapter);
+
+                // This way you set your selection with no animation which
+                // causes the on item selected listener to be called.
+                // But the listener is null so nothing is run. Then your listener is assigned.
+                spinnerBLEList.setSelection(0, false);
+
+                spinnerBLEList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                    @SuppressLint("SetTextI18n")
+                    @Override
+                    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                        if(connectBT != null){
+                            try {
+                                ConnectBT.getmSocket().close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        if(i == 0){
+                            return;
+                        }
+
+                        String address = pairList.get(i - 1).second;
+                        connectBT = new ConnectBT(
+                                getApplicationContext(),
+                                bluetoothAdapter,
+                                address);
+                        connectBT.delegate = asyncResponse;
+                        connectBT.execute();
+
+                        if(imageViewBLEIcon.getVisibility() == View.VISIBLE){
+                            updateIcon(
+                                    imageViewBLEIcon,
+                                    R.drawable.ic_bluetooth,
+                                    R.id.imageViewBLEIcon,
+                                    1f,
+                                    0f,
+                                    250,
+                                    View.INVISIBLE);
+                        }
+
+                        progressBarBLEConn.setVisibility(View.VISIBLE);
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> adapterView) {
+
+                    }
+                });
             }
-
-            // Show all bonded devices only
-            AlertDialog.Builder builderSingle = new AlertDialog.Builder(MainActivity.this);
-            builderSingle.setTitle("Connect to");
-
-            final String[] strName = new String[1];
-            builderSingle.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    strName[0] = arrayAdapter.getItem(which);
-
-                    connectBT = new ConnectBT(
-                            getApplicationContext(),
-                            bluetoothAdapter,
-                            Objects.requireNonNull(strName[0]).split("\n")[1]);
-                    connectBT.delegate = asyncResponse;
-                    connectBT.execute();
-                }
-            });
-
-            // Show listed devices
-            builderSingle.show();
         }
     }
 
@@ -162,5 +299,17 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         });
 
         thread.start();
+    }
+
+    private void updateIcon(View view, int imageResource, int resourceId, float alphaStart, float alphaEnd, int duration, int visibility){
+        final Animation animation = new AlphaAnimation(alphaStart, alphaEnd);
+        animation.setDuration(duration);
+
+        view.findViewById(resourceId);
+        if(view instanceof ImageView){
+            ((ImageView)view).setImageResource(imageResource);
+        }
+        view.startAnimation(animation);
+        view.setVisibility(visibility);
     }
 }

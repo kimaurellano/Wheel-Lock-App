@@ -50,7 +50,10 @@ public class UserControlFragment extends Fragment {
                 imageViewLockState.setImageResource(locked ? R.drawable.ic_locked : R.drawable.ic_unlocked);
                 try {
                     ConnectBT.getmSocket().getOutputStream().write(locked ? "LOCK".getBytes() : "UNLOCK".getBytes());
-                } catch (IOException e) {
+
+                    // Avoid flooding
+                    Thread.sleep(500);
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
