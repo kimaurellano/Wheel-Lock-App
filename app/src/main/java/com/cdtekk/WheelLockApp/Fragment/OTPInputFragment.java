@@ -5,11 +5,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.cdtekk.WheelLockApp.Interface.IFragmentChange;
@@ -21,7 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-public class OTPStatusFragment extends Fragment {
+public class OTPInputFragment extends Fragment {
 
     private IFragmentChange fragmentChangeListener;
     private String _message;

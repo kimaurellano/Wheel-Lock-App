@@ -18,9 +18,10 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.cdtekk.WheelLockApp.Fragment.OTPStatusFragment;
+import com.cdtekk.WheelLockApp.Fragment.OTPInputFragment;
 import com.cdtekk.WheelLockApp.Fragment.UserControlFragment;
 import com.cdtekk.WheelLockApp.Interface.AsyncResponse;
+import com.cdtekk.WheelLockApp.Interface.IBLEConnection;
 import com.cdtekk.WheelLockApp.Interface.IFragmentChange;
 import com.cdtekk.WheelLockApp.R;
 import com.cdtekk.WheelLockApp.Util.ConnectBT;
@@ -37,7 +38,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-public class MainActivity extends AppCompatActivity implements IFragmentChange, AsyncResponse {
+public class MainActivity extends AppCompatActivity implements IFragmentChange, AsyncResponse, IBLEConnection {
 
     private BluetoothAdapter bluetoothAdapter;
     private ConnectBT connectBT;
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
 
         imageViewBLEIcon.setVisibility(View.INVISIBLE);
 
-        currentFragment = new OTPStatusFragment();
+        currentFragment = new OTPInputFragment();
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.fragment_container_root_view , currentFragment);
@@ -105,44 +106,7 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         buttonDisconnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(connectBT != null){
-                    try {
-                        Toast.makeText(MainActivity.this, "Disconnected", Toast.LENGTH_SHORT).show();
-                        ConnectBT.getmSocket().close();
-
-                        updateIcon(
-                                imageViewBLEIcon,
-                                R.drawable.ic_bluetooth,
-                                R.id.imageViewBLEIcon,
-                                1f,
-                                0f,
-                                250,
-                                View.INVISIBLE);
-
-                        updateIcon(
-                                buttonDisconnect,
-                                0,
-                                R.id.buttonDisconnect,
-                                1f,
-                                0f,
-                                500,
-                                View.INVISIBLE
-                        );
-
-                        for (Fragment frg: Objects.requireNonNull(currentFragment.getActivity()).getSupportFragmentManager().getFragments()) {
-                            if(frg instanceof UserControlFragment){
-                                // Back to home page upon disconnect on Usercontrol
-                                OnFragmentChange(new OTPStatusFragment());
-                            }
-                        }
-
-                        // Reset dropdown
-                        int i = spinnerBLEList.getSelectedItemPosition() - spinnerBLEList.getSelectedItemPosition();
-                        spinnerBLEList.setSelection(i, false);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                onConnectionChange(false);
             }
         });
     }
@@ -155,6 +119,9 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         fragmentTransaction.commit();
 
         currentFragment = fragmentObject;
+
+        // Avoid switching of connection
+        spinnerBLEList.setEnabled(!(currentFragment instanceof UserControlFragment));
     }
 
     @SuppressLint("SetTextI18n")
@@ -162,6 +129,9 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
     public void processingFinish(Boolean isConnected) {
         progressBarBLEConn.setVisibility(View.INVISIBLE);
         if(!isConnected){
+            // provide reconnection on bluetooth item select
+            connectBT = null;
+
             Toast.makeText(this, "Connection failed", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -225,6 +195,7 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
                             }
                         }
 
+                        // Default selection will not do anything
                         if(i == 0){
                             return;
                         }
@@ -281,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
                             // Messages from HC-05
                             recievedMessage = new String(rawBytes, StandardCharsets.US_ASCII);
 
-                            ((OTPStatusFragment) currentFragment).setOtp(recievedMessage);
+                            ((OTPInputFragment) currentFragment).setOtp(recievedMessage);
 
                             handler.post(new Runnable() {
                                 @SuppressLint("SetTextI18n")
@@ -311,5 +282,56 @@ public class MainActivity extends AppCompatActivity implements IFragmentChange, 
         }
         view.startAnimation(animation);
         view.setVisibility(visibility);
+    }
+
+    @Override
+    public void onConnectionChange(boolean state) {
+        if(state){
+           return;
+        }
+
+        if(connectBT != null){
+            try {
+                // Reset all states to disconnected
+                Toast.makeText(MainActivity.this, "Disconnected", Toast.LENGTH_SHORT).show();
+                ConnectBT.getmSocket().close();
+
+                if(imageViewBLEIcon.getVisibility() == View.VISIBLE){
+                    updateIcon(
+                            imageViewBLEIcon,
+                            R.drawable.ic_bluetooth,
+                            R.id.imageViewBLEIcon,
+                            1f,
+                            0f,
+                            250,
+                            View.INVISIBLE);
+                }
+
+                if(buttonDisconnect.getVisibility() == View.VISIBLE){
+                    updateIcon(
+                            buttonDisconnect,
+                            0,
+                            R.id.buttonDisconnect,
+                            1f,
+                            0f,
+                            500,
+                            View.INVISIBLE
+                    );
+                }
+
+                for (Fragment frg: Objects.requireNonNull(currentFragment.getActivity()).getSupportFragmentManager().getFragments()) {
+                    if(frg instanceof UserControlFragment){
+                        // Back to home page upon disconnect on Usercontrol
+                        OnFragmentChange(new OTPInputFragment());
+                    }
+                }
+
+                // Reset dropdown
+                int i = spinnerBLEList.getSelectedItemPosition() - spinnerBLEList.getSelectedItemPosition();
+                spinnerBLEList.setSelection(i, false);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
