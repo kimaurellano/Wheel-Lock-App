@@ -1,4 +1,4 @@
-package com.cdtekk.bluetooth_connectivity_testapp;
+package com.cdtekk.WheelLockApp;
 
 import org.junit.Test;
 
